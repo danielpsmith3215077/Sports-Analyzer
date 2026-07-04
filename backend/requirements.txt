@@ -1,0 +1,14 @@
+# Backend (Cloud Core + Stripe payments) dependencies.
+# Install with:  pip install -r backend/requirements.txt
+fastapi
+uvicorn
+databases
+aiosqlite
+asyncpg
+sqlalchemy
+stripe
+python-dateutil
+email-validator
+pydantic
+requests
+pytest

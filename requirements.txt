@@ -1,0 +1,34 @@
+# Unified dependency set for the Sports Analyzer Render Web Service container.
+# Runs the FastAPI cloud API (backend/) and carries the full quantitative
+# prediction engine libraries (Streamlit dashboard + models). No SQLite driver:
+# the platform is Postgres/Supabase only.
+
+# --- Web / API ---
+fastapi
+uvicorn[standard]
+pydantic
+email-validator
+
+# --- Async Postgres data layer (Supabase) ---
+databases
+asyncpg
+sqlalchemy
+
+# --- Payments ---
+stripe
+
+# --- Prediction engine (Streamlit dashboard + models) ---
+streamlit
+scikit-learn
+scipy
+pandas
+numpy
+plotly
+anthropic
+
+# --- Shared utilities ---
+python-dateutil
+requests
+
+# --- Tests ---
+pytest

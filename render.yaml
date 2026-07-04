@@ -1,0 +1,29 @@
+# render.yaml — Render Blueprint for the Sports Analyzer FastAPI engine.
+# Deploys backend/main.py as a long-running Web Service (Fluid/always-on
+# process, so the Supabase Postgres connection pool persists across requests).
+services:
+  - type: web
+    name: sportsanalyzer-api
+    runtime: python
+    plan: free
+    # Root dir is the repo root so the `backend` package imports cleanly.
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    # cron-job.org pings this to keep the free-tier instance awake.
+    healthCheckPath: /api/healthcheck
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      # Secrets — set these in the Render dashboard (sync:false keeps them
+      # out of source control). DATABASE_URL must be the Supabase Postgres URL.
+      - key: DATABASE_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_INDIVIDUAL_PRICE_ID
+        sync: false
+      - key: STRIPE_ENTERPRISE_PRICE_ID
+        sync: false

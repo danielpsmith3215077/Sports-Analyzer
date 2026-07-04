@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sports Analyzer</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0e1117" />
+  <meta name="description" content="Six-layer quantitative UFC fight prediction engine." />
+
+  <!-- iOS home-screen (standalone, hides Safari chrome) -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Sports Analyzer" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1.25rem;
+      background: #0e1117; color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      text-align: center; padding: 2rem;
+    }
+    img.logo { width: 120px; height: 120px; border-radius: 24px; }
+    h1 { margin: 0; font-size: 1.5rem; }
+    p { margin: 0; color: #9aa4b2; max-width: 30rem; }
+    a.btn {
+      display: inline-block; padding: 0.75rem 1.5rem; border-radius: 10px;
+      background: linear-gradient(135deg, #63b3ed, #4c8dd6); color: #08111f;
+      font-weight: 600; text-decoration: none;
+    }
+    /* Hidden in native wrappers via app.js (web-only billing compliance). */
+    #billing.native-hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <img class="logo" src="/icons/icon-192.png" alt="Sports Analyzer" />
+  <h1>Sports Analyzer</h1>
+  <p>Loading your licensed UFC prediction dashboard…</p>
+  <a class="btn" id="launch" href="#">Open dashboard</a>
+
+  <div id="billing">
+    <p style="margin-top:1.5rem">Need access? Start a subscription on the web.</p>
+    <a class="btn" id="checkout-individual" href="/checkout/individual">Individual plan</a>
+    <a class="btn" id="checkout-enterprise" href="/checkout/enterprise">Enterprise plan</a>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

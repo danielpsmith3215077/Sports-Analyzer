@@ -1,0 +1,28 @@
+# --- Secrets / local env (NEVER commit) ---
+.env
+.env.*
+!.env.example
+
+# --- Vercel ---
+.vercel
+
+# --- Python ---
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+*.db
+backend/*.db
+
+# --- Node / Next.js (frontend) ---
+node_modules/
+web/.next/
+web/out/
+web/node_modules/
+
+# --- Mobile (Capacitor) ---
+mobile/node_modules/
+
+# --- Archives / misc ---
+*.zip
+.DS_Store

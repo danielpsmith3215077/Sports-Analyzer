@@ -1,6 +1,9 @@
-# render.yaml — Render Blueprint for the Sports Analyzer FastAPI engine.
-# Deploys backend/main.py as a long-running Web Service (Fluid/always-on
-# process, so the Supabase Postgres connection pool persists across requests).
+# render.yaml — Render Blueprint for the Sports Analyzer platform.
+# Two long-running Web Services (Fluid/always-on, so connection pools and
+# Streamlit's in-memory model cache persist across requests):
+#   1. sportsanalyzer-api        FastAPI licensing/Stripe/webhook backend.
+#   2. sportsanalyzer-dashboard  The actual product UI (Streamlit) — the
+#      six-layer UFC prediction engine, gated by license_gate.py against #1.
 services:
   - type: web
     name: sportsanalyzer-api
@@ -26,4 +29,28 @@ services:
       - key: STRIPE_INDIVIDUAL_PRICE_ID
         sync: false
       - key: STRIPE_ENTERPRISE_PRICE_ID
+        sync: false
+
+  - type: web
+    name: sportsanalyzer-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      # Wires the license gate (license_gate.py) to the FastAPI service above.
+      - key: SAAS_API_URL
+        value: https://sportsanalyzer-api.onrender.com
+      # Used to build Stripe checkout success/cancel redirect URLs back to
+      # this dashboard's own public address.
+      - key: APP_URL
+        value: https://sportsanalyzer-dashboard.onrender.com
+      # Optional — enables the "Executive Tactical Breakdown (AI)" section.
+      # Leave unset to skip it with no error.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NVIDIA_API_KEY
         sync: false

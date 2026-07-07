@@ -16,3 +16,29 @@ export const API_BASE_URL: string =
 export function apiUrl(path: string): string {
   return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/**
+ * The actual product UI (Streamlit dashboard: fighter picker, Monte Carlo
+ * simulation, six-layer model breakdown) lives on its own Render service,
+ * gated by license_gate.py against the API above. This site is the
+ * marketing/checkout front door that hands licensed users off to it.
+ */
+export const DASHBOARD_URL: string =
+  process.env.NEXT_PUBLIC_DASHBOARD_URL?.replace(/\/+$/, "") ||
+  "http://localhost:8501";
+
+/** Build a dashboard URL, optionally pre-filling the access token query param. */
+export function dashboardUrl(accessToken?: string): string {
+  if (!accessToken) return DASHBOARD_URL;
+  return `${DASHBOARD_URL}/?token=${encodeURIComponent(accessToken)}`;
+}
+
+/**
+ * The public web origin for this marketing site itself. Used for Stripe
+ * checkout success/cancel redirects when running inside the native mobile
+ * app, where window.location.origin is an internal capacitor:// scheme that
+ * Stripe can't usefully redirect back to.
+ */
+export const SITE_URL: string =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
+  "https://sportsanalyzer-web.vercel.app";

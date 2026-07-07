@@ -8,6 +8,10 @@ import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 
+from env_bootstrap import load_env_local
+
+load_env_local()  # must run before license_gate is imported (reads env at import time)
+
 from database import FightDatabase
 from models import PredictionEngine
 from license_gate import enforce_license

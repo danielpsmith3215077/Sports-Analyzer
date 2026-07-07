@@ -22,6 +22,24 @@ from datetime import timedelta
 
 import pytest
 
+# ---------------------------------------------------------------------------
+# SAFETY GUARD: never allow this suite to run against the live Supabase
+# production project, under any variable name. This is a hard stop (not a
+# skip) so a misconfigured TEST_DATABASE_URL can never write throwaway test
+# rows — or worse, DROP SCHEMA CASCADE — against real user accounts, Stripe
+# webhook logs, or match telemetry.
+# ---------------------------------------------------------------------------
+_LIVE_SUPABASE_PROJECT_REF = "cstgtdzdikfploisovdl"
+for _env_name in ("TEST_DATABASE_URL", "DATABASE_URL"):
+    if _LIVE_SUPABASE_PROJECT_REF in os.environ.get(_env_name, ""):
+        pytest.exit(
+            f"REFUSING TO RUN: {_env_name} points at the LIVE Supabase project "
+            f"({_LIVE_SUPABASE_PROJECT_REF}). These tests create/drop tables and "
+            f"must only ever run against an isolated, disposable test database. "
+            f"Point TEST_DATABASE_URL at a separate Postgres instance/project.",
+            returncode=1,
+        )
+
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "").strip()
 
 if not TEST_DATABASE_URL:

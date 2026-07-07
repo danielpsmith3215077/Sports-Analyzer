@@ -1,9 +1,5 @@
 {
- "appId": "com.danielsmith.sportsanalyzer",
- "appName": "Sports Analyzer",
- "webDir": "../web",
- "server": {
-   "url": "http://localhost:8501",
-   "cleartext": true
- }
+  "appId": "com.danielsmith.sportsanalyzer",
+  "appName": "Sports Analyzer",
+  "webDir": "../web/out"
 }

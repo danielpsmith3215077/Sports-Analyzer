@@ -55,6 +55,7 @@ TEST_SCHEMA = "sa_test_backend"
 # Point the app at the test database + isolated schema BEFORE importing backend.
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["DB_SCHEMA"] = TEST_SCHEMA
+os.environ["ADMIN_API_KEY"] = "test-admin-key"
 
 import asyncpg  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -63,6 +64,17 @@ from backend import db  # noqa: E402
 from backend.main import app  # noqa: E402
 
 client = TestClient(app)
+ADMIN_HEADERS = {"X-Admin-Key": "test-admin-key"}
+
+
+def admin_post(path: str, **kwargs):
+    kwargs.setdefault("headers", ADMIN_HEADERS)
+    return client.post(path, **kwargs)
+
+
+def admin_get(path: str, **kwargs):
+    kwargs.setdefault("headers", ADMIN_HEADERS)
+    return client.get(path, **kwargs)
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +133,7 @@ def _force_expire(access_token, days_ago=1):
 # Tests
 # ---------------------------------------------------------------------------
 def test_create_user_returns_uuid_token_and_6_month_expiry():
-    resp = client.post("/users", json={"email": "alice@example.com", "name": "Alice"})
+    resp = admin_post("/users", json={"email": "alice@example.com", "name": "Alice"})
     assert resp.status_code == 201, resp.text
     body = resp.json()
     assert body["email"] == "alice@example.com"
@@ -133,28 +145,28 @@ def test_create_user_returns_uuid_token_and_6_month_expiry():
 
 
 def test_duplicate_email_rejected():
-    client.post("/users", json={"email": "dupe@example.com", "name": "Dupe"})
-    again = client.post("/users", json={"email": "dupe@example.com", "name": "Dupe2"})
+    admin_post("/users", json={"email": "dupe@example.com", "name": "Dupe"})
+    again = admin_post("/users", json={"email": "dupe@example.com", "name": "Dupe2"})
     assert again.status_code == 409
 
 
 def test_list_and_get_user():
-    resp = client.post("/users", json={"email": "bob@example.com", "name": "Bob"})
+    resp = admin_post("/users", json={"email": "bob@example.com", "name": "Bob"})
     uid = resp.json()["id"]
 
-    list_resp = client.get("/users")
+    list_resp = admin_get("/users")
     assert list_resp.status_code == 200
     assert any(u["id"] == uid for u in list_resp.json())
 
-    one = client.get(f"/users/{uid}")
+    one = admin_get(f"/users/{uid}")
     assert one.status_code == 200
     assert one.json()["email"] == "bob@example.com"
 
-    assert client.get("/users/00000000-0000-0000-0000-000000000000").status_code == 404
+    assert admin_get("/users/00000000-0000-0000-0000-000000000000").status_code == 404
 
 
 def test_validate_valid_token():
-    resp = client.post("/users", json={"email": "carol@example.com", "name": "Carol"})
+    resp = admin_post("/users", json={"email": "carol@example.com", "name": "Carol"})
     token = resp.json()["access_token"]
 
     v = client.get(f"/validate/{token}")
@@ -167,7 +179,7 @@ def test_validate_valid_token():
 
 
 def test_validate_expired_token():
-    resp = client.post("/users", json={"email": "dave@example.com", "name": "Dave"})
+    resp = admin_post("/users", json={"email": "dave@example.com", "name": "Dave"})
     token = resp.json()["access_token"]
     _force_expire(token)
 
@@ -184,54 +196,54 @@ def test_validate_unknown_token():
 
 
 def test_pause_then_validate_invalid_then_resume_valid():
-    resp = client.post("/users", json={"email": "erin@example.com", "name": "Erin"})
+    resp = admin_post("/users", json={"email": "erin@example.com", "name": "Erin"})
     user = resp.json()
     uid, token = user["id"], user["access_token"]
 
-    paused = client.post(f"/users/{uid}/pause")
+    paused = admin_post(f"/users/{uid}/pause")
     assert paused.status_code == 200
     assert paused.json()["status"] == "paused"
     assert client.get(f"/validate/{token}").json()["valid"] is False
 
-    resumed = client.post(f"/users/{uid}/resume")
+    resumed = admin_post(f"/users/{uid}/resume")
     assert resumed.status_code == 200
     assert resumed.json()["status"] == "active"
     assert client.get(f"/validate/{token}").json()["valid"] is True
 
 
 def test_cannot_resume_expired_user():
-    resp = client.post("/users", json={"email": "frank@example.com", "name": "Frank"})
+    resp = admin_post("/users", json={"email": "frank@example.com", "name": "Frank"})
     user = resp.json()
     uid, token = user["id"], user["access_token"]
 
-    client.post(f"/users/{uid}/pause")
+    admin_post(f"/users/{uid}/pause")
     _force_expire(token)
 
-    r = client.post(f"/users/{uid}/resume")
+    r = admin_post(f"/users/{uid}/resume")
     assert r.status_code == 409
 
 
 def test_revoke_is_permanent():
-    resp = client.post("/users", json={"email": "grace@example.com", "name": "Grace"})
+    resp = admin_post("/users", json={"email": "grace@example.com", "name": "Grace"})
     user = resp.json()
     uid, token = user["id"], user["access_token"]
 
-    revoked = client.post(f"/users/{uid}/revoke")
+    revoked = admin_post(f"/users/{uid}/revoke")
     assert revoked.status_code == 200
     assert revoked.json()["status"] == "revoked"
     assert client.get(f"/validate/{token}").json()["valid"] is False
 
-    assert client.post(f"/users/{uid}/resume").status_code == 409
-    assert client.post(f"/users/{uid}/pause").status_code == 409
+    assert admin_post(f"/users/{uid}/resume").status_code == 409
+    assert admin_post(f"/users/{uid}/pause").status_code == 409
 
 
 def test_enterprise_invite_inherits_parent_expiry():
-    parent = client.post(
+    parent = admin_post(
         "/users",
         json={"email": "corp@example.com", "name": "Corp Admin", "plan_type": "enterprise"},
     ).json()
 
-    invite = client.post(
+    invite = admin_post(
         f"/enterprise/{parent['id']}/invite",
         json={"email": "seat1@example.com", "name": "Seat One"},
     )
@@ -243,10 +255,10 @@ def test_enterprise_invite_inherits_parent_expiry():
 
 
 def test_enterprise_invite_rejected_for_individual_parent():
-    parent = client.post(
+    parent = admin_post(
         "/users", json={"email": "solo@example.com", "name": "Solo"}
     ).json()
-    r = client.post(
+    r = admin_post(
         f"/enterprise/{parent['id']}/invite",
         json={"email": "x@example.com", "name": "X"},
     )
@@ -254,12 +266,12 @@ def test_enterprise_invite_rejected_for_individual_parent():
 
 
 def test_enterprise_invite_rejected_when_parent_inactive():
-    parent = client.post(
+    parent = admin_post(
         "/users",
         json={"email": "corp2@example.com", "name": "Corp2", "plan_type": "enterprise"},
     ).json()
-    client.post(f"/users/{parent['id']}/pause")
-    r = client.post(
+    admin_post(f"/users/{parent['id']}/pause")
+    r = admin_post(
         f"/enterprise/{parent['id']}/invite",
         json={"email": "y@example.com", "name": "Y"},
     )

@@ -1,9 +1,10 @@
 # render.yaml — Render Blueprint for the Sports Analyzer platform.
-# Two long-running Web Services (Fluid/always-on, so connection pools and
+# Three long-running Web Services (Fluid/always-on, so connection pools and
 # Streamlit's in-memory model cache persist across requests):
 #   1. sportsanalyzer-api        FastAPI licensing/Stripe/webhook backend.
 #   2. sportsanalyzer-dashboard  The actual product UI (Streamlit) — the
 #      six-layer UFC prediction engine, gated by license_gate.py against #1.
+#   3. sportsanalyzer-admin      Optional Streamlit admin control tower.
 services:
   - type: web
     name: sportsanalyzer-api
@@ -30,6 +31,8 @@ services:
         sync: false
       - key: STRIPE_ENTERPRISE_PRICE_ID
         sync: false
+      - key: ADMIN_API_KEY
+        sync: false
 
   - type: web
     name: sportsanalyzer-dashboard
@@ -53,4 +56,21 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: NVIDIA_API_KEY
+        sync: false
+
+  - type: web
+    name: sportsanalyzer-admin
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run admin_dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: SAAS_API_URL
+        value: https://sportsanalyzer-api.onrender.com
+      - key: ADMIN_API_KEY
+        sync: false
+      - key: ADMIN_DASHBOARD_PASSWORD
         sync: false

@@ -29,6 +29,14 @@ import requests
 # Configuration
 # ---------------------------------------------------------------------------
 API_URL = os.environ.get("SAAS_API_URL", "http://localhost:8000").rstrip("/")
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "").strip()
+
+
+def _admin_headers() -> dict:
+    """Attach X-Admin-Key when ADMIN_API_KEY is configured."""
+    if not ADMIN_API_KEY:
+        return {}
+    return {"X-Admin-Key": ADMIN_API_KEY}
 
 # --- Configurable placeholder pricing (used ONLY for the MRR estimate) -----
 # Clearly exposed and modifiable; override via env vars if desired.
@@ -119,7 +127,7 @@ def filter_users(users, search: str = "", statuses=None, plans=None):
 # ---------------------------------------------------------------------------
 def fetch_users():
     try:
-        resp = requests.get(f"{API_URL}/users", timeout=10)
+        resp = requests.get(f"{API_URL}/users", headers=_admin_headers(), timeout=10)
         resp.raise_for_status()
         return resp.json(), None
     except Exception as e:  # noqa: BLE001
@@ -127,7 +135,7 @@ def fetch_users():
 
 
 def api_post(path):
-    return requests.post(f"{API_URL}{path}", timeout=10)
+    return requests.post(f"{API_URL}{path}", headers=_admin_headers(), timeout=10)
 
 
 # ---------------------------------------------------------------------------

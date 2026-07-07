@@ -19,6 +19,7 @@ import os
 import sys
 
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./backend/_pytest_saas.db")
+os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -325,7 +326,7 @@ def test_http_webhook_completed_creates_user_via_route():
             assert r.status_code == 200, r.text
             assert r.json()["result"]["action"] == "created"
 
-            users = client.get("/users").json()
+            users = client.get("/users", headers={"X-Admin-Key": "test-admin-key"}).json()
             match = [u for u in users if u["stripe_customer_id"] == "cus_http_route"]
             assert len(match) == 1
             assert match[0]["plan_type"] == "enterprise"

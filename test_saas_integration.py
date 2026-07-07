@@ -60,6 +60,8 @@ if not TEST_DATABASE_URL:
     )
 
 TEST_SCHEMA = "sa_test_integration"
+ADMIN_API_KEY = "test-admin-key"
+ADMIN_HEADERS = {"X-Admin-Key": ADMIN_API_KEY}
 
 
 def _asyncpg_dsn() -> str:
@@ -115,6 +117,7 @@ def run_integration():
     env = dict(os.environ)
     env["DATABASE_URL"] = TEST_DATABASE_URL
     env["DB_SCHEMA"] = TEST_SCHEMA
+    env["ADMIN_API_KEY"] = ADMIN_API_KEY
 
     repo_root = os.path.dirname(os.path.abspath(__file__))
     proc = subprocess.Popen(
@@ -143,6 +146,7 @@ def run_integration():
         r = requests.post(
             f"{base_url}/users",
             json={"email": "integration@example.com", "name": "Integration User"},
+            headers=ADMIN_HEADERS,
             timeout=10,
         )
         check(r.status_code == 201, "POST /users creates a user (201)")
@@ -155,13 +159,13 @@ def run_integration():
         check(v["days_remaining"] > 150, "new user has ~6-month license")
 
         # 3. pause -> invalid
-        rp = requests.post(f"{base_url}/users/{user['id']}/pause", timeout=10)
+        rp = requests.post(f"{base_url}/users/{user['id']}/pause", headers=ADMIN_HEADERS, timeout=10)
         check(rp.status_code == 200, "POST /users/{id}/pause succeeds")
         v = requests.get(f"{base_url}/validate/{token}", timeout=10).json()
         check(v["valid"] is False, "paused user now validates as INVALID")
 
         # 4. resume -> valid again
-        rr = requests.post(f"{base_url}/users/{user['id']}/resume", timeout=10)
+        rr = requests.post(f"{base_url}/users/{user['id']}/resume", headers=ADMIN_HEADERS, timeout=10)
         check(rr.status_code == 200, "POST /users/{id}/resume succeeds")
         v = requests.get(f"{base_url}/validate/{token}", timeout=10).json()
         check(v["valid"] is True, "resumed user validates as VALID again")
@@ -170,11 +174,13 @@ def run_integration():
         parent = requests.post(
             f"{base_url}/users",
             json={"email": "ent@example.com", "name": "Ent Admin", "plan_type": "enterprise"},
+            headers=ADMIN_HEADERS,
             timeout=10,
         ).json()
         invite = requests.post(
             f"{base_url}/enterprise/{parent['id']}/invite",
             json={"email": "seat@example.com", "name": "Seat"},
+            headers=ADMIN_HEADERS,
             timeout=10,
         )
         check(invite.status_code == 201, "POST /enterprise/{id}/invite succeeds")
@@ -189,7 +195,7 @@ def run_integration():
         )
 
         # revoke is permanent
-        requests.post(f"{base_url}/users/{user['id']}/revoke", timeout=10)
+        requests.post(f"{base_url}/users/{user['id']}/revoke", headers=ADMIN_HEADERS, timeout=10)
         v = requests.get(f"{base_url}/validate/{token}", timeout=10).json()
         check(v["valid"] is False and v["status"] == "revoked",
               "revoked user is permanently invalid")

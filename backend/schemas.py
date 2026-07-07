@@ -50,3 +50,17 @@ class ValidateResponse(BaseModel):
     days_remaining: int
     plan_type: str
     status: str
+
+
+class AdminVerifyResponse(BaseModel):
+    ok: bool = True
+
+
+class AdminStats(BaseModel):
+    total_users: int
+    total_active: int
+    pending_renewals: int
+    paused: int
+    revoked: int
+    active_individual: int
+    active_enterprise: int

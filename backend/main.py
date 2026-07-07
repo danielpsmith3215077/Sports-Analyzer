@@ -21,7 +21,10 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db, stripe_config
+from backend.admin_auth import require_admin_key
 from backend.schemas import (
+    AdminStats,
+    AdminVerifyResponse,
     CheckoutRequest,
     CheckoutResponse,
     EnterpriseInvite,
@@ -71,7 +74,7 @@ _LOCAL_ORIGINS = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_LOCAL_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://.*\.(vercel\.app|onrender\.com)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -121,10 +124,50 @@ async def healthcheck():
 
 
 # ---------------------------------------------------------------------------
-# Milestone 1: user + license endpoints
+# Admin auth + summary (X-Admin-Key header)
+# ---------------------------------------------------------------------------
+_RENEWAL_WINDOW_DAYS = 7
+
+
+def _compute_admin_stats(rows: list[dict]) -> AdminStats:
+    active = [r for r in rows if r.get("status") == db.STATUS_ACTIVE]
+    paused = [r for r in rows if r.get("status") == db.STATUS_PAUSED]
+    revoked = [r for r in rows if r.get("status") == db.STATUS_REVOKED]
+    pending = [
+        r
+        for r in active
+        if 0 <= db.days_remaining(r["expires_at"]) <= _RENEWAL_WINDOW_DAYS
+    ]
+    active_individual = sum(1 for r in active if r.get("plan_type") == db.PLAN_INDIVIDUAL)
+    active_enterprise = sum(1 for r in active if r.get("plan_type") == db.PLAN_ENTERPRISE)
+    return AdminStats(
+        total_users=len(rows),
+        total_active=len(active),
+        pending_renewals=len(pending),
+        paused=len(paused),
+        revoked=len(revoked),
+        active_individual=active_individual,
+        active_enterprise=active_enterprise,
+    )
+
+
+@app.post("/admin/verify", response_model=AdminVerifyResponse)
+async def admin_verify(_: None = Depends(require_admin_key)):
+    """Lightweight login check for admin UIs (no side effects)."""
+    return AdminVerifyResponse()
+
+
+@app.get("/admin/stats", response_model=AdminStats)
+async def admin_stats(_: None = Depends(require_admin_key)):
+    rows = await db.list_users()
+    return _compute_admin_stats(rows)
+
+
+# ---------------------------------------------------------------------------
+# Milestone 1: user + license endpoints (admin-protected)
 # ---------------------------------------------------------------------------
 @app.post("/users", response_model=UserOut, status_code=201)
-async def create_user(payload: UserCreate):
+async def create_user(payload: UserCreate, _: None = Depends(require_admin_key)):
     if payload.plan_type not in db.VALID_PLANS:
         raise HTTPException(status_code=422, detail=f"Invalid plan_type: {payload.plan_type}")
     existing = await db.get_user_by_email(payload.email)
@@ -137,18 +180,18 @@ async def create_user(payload: UserCreate):
 
 
 @app.get("/users", response_model=list[UserOut])
-async def list_users():
+async def list_users(_: None = Depends(require_admin_key)):
     rows = await db.list_users()
     return [serialize_user(r) for r in rows]
 
 
 @app.get("/users/{user_id}", response_model=UserOut)
-async def get_user(user_id: str):
+async def get_user(user_id: str, _: None = Depends(require_admin_key)):
     return serialize_user(await _get_user_or_404(user_id))
 
 
 @app.post("/users/{user_id}/pause", response_model=UserOut)
-async def pause_user(user_id: str):
+async def pause_user(user_id: str, _: None = Depends(require_admin_key)):
     row = await _get_user_or_404(user_id)
     if row["status"] == db.STATUS_REVOKED:
         raise HTTPException(status_code=409, detail="Cannot pause a revoked account")
@@ -157,7 +200,7 @@ async def pause_user(user_id: str):
 
 
 @app.post("/users/{user_id}/resume", response_model=UserOut)
-async def resume_user(user_id: str):
+async def resume_user(user_id: str, _: None = Depends(require_admin_key)):
     row = await _get_user_or_404(user_id)
     if row["status"] == db.STATUS_REVOKED:
         raise HTTPException(status_code=409, detail="Cannot resume a revoked account")
@@ -168,7 +211,7 @@ async def resume_user(user_id: str):
 
 
 @app.post("/users/{user_id}/revoke", response_model=UserOut)
-async def revoke_user(user_id: str):
+async def revoke_user(user_id: str, _: None = Depends(require_admin_key)):
     await _get_user_or_404(user_id)
     updated = await db.update_status(user_id, db.STATUS_REVOKED)
     return serialize_user(updated)
@@ -195,7 +238,11 @@ async def validate_token(access_token: str):
 
 
 @app.post("/enterprise/{enterprise_user_id}/invite", response_model=UserOut, status_code=201)
-async def enterprise_invite(enterprise_user_id: str, payload: EnterpriseInvite):
+async def enterprise_invite(
+    enterprise_user_id: str,
+    payload: EnterpriseInvite,
+    _: None = Depends(require_admin_key),
+):
     parent = await _get_user_or_404(enterprise_user_id)
     if parent["plan_type"] != db.PLAN_ENTERPRISE:
         raise HTTPException(

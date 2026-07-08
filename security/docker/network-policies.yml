@@ -1,0 +1,70 @@
+# Docker network isolation for self-hosted Sports Analyzer
+#
+# Use when running FastAPI + Streamlit + nginx on your own Docker host.
+# Render/Vercel deployments do NOT use this file.
+#
+# Threat mitigated: lateral movement — the database and internal services are
+# unreachable from the public edge network.
+
+version: "3.9"
+
+services:
+  # -------------------------------------------------------------------------
+  # Edge: only nginx is published to the host (80/443)
+  # -------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./security/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./security/nginx/waf-rules.conf:/etc/nginx/waf-rules.conf:ro
+    networks:
+      - edge
+      - app
+    depends_on:
+      - api
+      - dashboard
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # Application tier: no host ports — reachable only via nginx on `app` net
+  # -------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    environment:
+      - DATABASE_URL
+      - ADMIN_API_KEY
+      - STRIPE_SECRET_KEY
+      - STRIPE_WEBHOOK_SECRET
+    networks:
+      - app
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    environment:
+      - SAAS_API_URL=http://api:8000
+    networks:
+      - app
+    expose:
+      - "8501"
+    restart: unless-stopped
+
+networks:
+  edge:
+    driver: bridge
+    # Public-facing network — nginx only
+  app:
+    driver: bridge
+    internal: true
+    # No route to the internet; api/dashboard talk to each other + nginx only

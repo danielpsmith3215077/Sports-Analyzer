@@ -56,6 +56,7 @@ TEST_SCHEMA = "sa_test_backend"
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["DB_SCHEMA"] = TEST_SCHEMA
 os.environ["ADMIN_API_KEY"] = "test-admin-key"
+os.environ["RATE_LIMIT_ENABLED"] = "false"
 
 import asyncpg  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

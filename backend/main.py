@@ -14,6 +14,8 @@ it defaults to a local async SQLite database for zero-config development.
 """
 
 import logging
+import os
+import re
 from contextlib import asynccontextmanager
 
 import stripe
@@ -22,6 +24,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db, stripe_config
 from backend.admin_auth import require_admin_key
+from backend.security_middleware import (
+    RequestGuardMiddleware,
+    SecurityHeadersMiddleware,
+    sanitize_text,
+)
 from backend.schemas import (
     AdminStats,
     AdminVerifyResponse,
@@ -60,24 +67,56 @@ app = FastAPI(
     description="Supabase-backed accounts, licensing, and Stripe payments.",
     version="2.0.0",
     lifespan=lifespan,
+    # Hide OpenAPI docs in production — reduces attack surface (schema enumeration).
+    docs_url="/docs" if os.environ.get("ENABLE_API_DOCS", "").lower() in ("1", "true") else None,
+    redoc_url=None,
 )
 
 # ---------------------------------------------------------------------------
-# CORS: allow the Streamlit clients (8501/8502/8503) and Vercel edge networks.
+# Security middleware (Zero Trust — verify every request before handler logic)
+# Order: outermost first. CORS wraps security headers; guards run inside CORS.
+# ---------------------------------------------------------------------------
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestGuardMiddleware)
+
+# ---------------------------------------------------------------------------
+# CORS: least-privilege origin allowlist for known Sports Analyzer surfaces.
+# Threat mitigated: cross-origin data exfiltration from admin endpoints.
+# Preview deploys: sportsanalyzer-web-* and sportsanalyzer-*-pr-*.vercel.app
 # ---------------------------------------------------------------------------
 _LOCAL_ORIGINS = [
     f"http://{host}:{port}"
     for host in ("localhost", "127.0.0.1")
-    for port in (8501, 8502, 8503)
+    for port in (3000, 8000, 8501, 8502, 8503)
+]
+
+_PRODUCTION_ORIGINS = [
+    "https://sportsanalyzer-web.vercel.app",
+    "https://sportsanalyzer-dashboard.onrender.com",
+    "https://sportsanalyzer-admin.onrender.com",
+]
+
+# Project-scoped regex — no longer allows arbitrary *.vercel.app / *.onrender.com
+_CORS_ORIGIN_REGEX = (
+    r"^https://sportsanalyzer(-web)?(-[a-z0-9-]+)?\.vercel\.app$"
+    r"|^https://sportsanalyzer-(dashboard|admin|api)(-[a-z0-9-]+)?\.onrender\.com$"
+)
+
+_extra_origins = [
+    o.strip()
+    for o in os.environ.get("CORS_EXTRA_ORIGINS", "").split(",")
+    if o.strip()
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_LOCAL_ORIGINS,
-    allow_origin_regex=r"https://.*\.(vercel\.app|onrender\.com)",
+    allow_origins=_LOCAL_ORIGINS + _PRODUCTION_ORIGINS + _extra_origins,
+    allow_origin_regex=_CORS_ORIGIN_REGEX,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Admin-Key", "stripe-signature", "Authorization"],
+    expose_headers=["Retry-After"],
+    max_age=600,
 )
 
 
@@ -166,15 +205,19 @@ async def admin_stats(_: None = Depends(require_admin_key)):
 # ---------------------------------------------------------------------------
 # Milestone 1: user + license endpoints (admin-protected)
 # ---------------------------------------------------------------------------
+# URL-safe tokens from secrets.token_urlsafe(32) — ~43 chars, [A-Za-z0-9_-]
+_ACCESS_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{20,128}$")
+
+
 @app.post("/users", response_model=UserOut, status_code=201)
 async def create_user(payload: UserCreate, _: None = Depends(require_admin_key)):
-    if payload.plan_type not in db.VALID_PLANS:
-        raise HTTPException(status_code=422, detail=f"Invalid plan_type: {payload.plan_type}")
-    existing = await db.get_user_by_email(payload.email)
+    email = str(payload.email).strip().lower()
+    name = sanitize_text(payload.name, max_length=200) or payload.name
+    existing = await db.get_user_by_email(email)
     if existing:
         raise HTTPException(status_code=409, detail="A user with this email already exists")
     row = await db.create_user(
-        email=payload.email, name=payload.name, plan_type=payload.plan_type
+        email=email, name=name, plan_type=payload.plan_type
     )
     return serialize_user(row)
 
@@ -219,6 +262,11 @@ async def revoke_user(user_id: str, _: None = Depends(require_admin_key)):
 
 @app.get("/validate/{access_token}", response_model=ValidateResponse)
 async def validate_token(access_token: str):
+    # Reject malformed tokens early — mitigates token-enumeration probes.
+    if not _ACCESS_TOKEN_RE.match(access_token):
+        return ValidateResponse(
+            valid=False, days_remaining=0, plan_type="", status="not_found"
+        )
     row = await db.get_user_by_token(access_token)
     if row is None:
         return ValidateResponse(
@@ -252,12 +300,14 @@ async def enterprise_invite(
         raise HTTPException(
             status_code=400, detail="Parent enterprise account is not active"
         )
-    if await db.get_user_by_email(payload.email):
+    invite_email = str(payload.email).strip().lower()
+    invite_name = sanitize_text(payload.name, max_length=200) or payload.name
+    if await db.get_user_by_email(invite_email):
         raise HTTPException(status_code=409, detail="A user with this email already exists")
 
     invited = await db.create_user(
-        email=payload.email,
-        name=payload.name,
+        email=invite_email,
+        name=invite_name,
         plan_type=db.PLAN_ENTERPRISE,
         # Mirror the parent's exact expiration matrix (not a fresh 6 months).
         expires_at=db.parse_dt(parent["expires_at"]),

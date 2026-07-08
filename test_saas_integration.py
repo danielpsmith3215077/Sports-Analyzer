@@ -118,6 +118,7 @@ def run_integration():
     env["DATABASE_URL"] = TEST_DATABASE_URL
     env["DB_SCHEMA"] = TEST_SCHEMA
     env["ADMIN_API_KEY"] = ADMIN_API_KEY
+    env["RATE_LIMIT_ENABLED"] = "false"
 
     repo_root = os.path.dirname(os.path.abspath(__file__))
     proc = subprocess.Popen(

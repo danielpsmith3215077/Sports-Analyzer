@@ -20,6 +20,7 @@ import sys
 
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./backend/_pytest_saas.db")
 os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
 
 from fastapi.testclient import TestClient  # noqa: E402
 

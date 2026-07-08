@@ -1,0 +1,46 @@
+{
+  "description": "Sports Analyzer Cloudflare WAF custom rules (reference export)",
+  "kind": "zone",
+  "phase": "http_request_firewall_custom",
+  "rules": [
+    {
+      "action": "block",
+      "description": "Block known vulnerability scanner User-Agents",
+      "enabled": true,
+      "expression": "(http.user_agent contains \"sqlmap\") or (http.user_agent contains \"nikto\") or (http.user_agent contains \"nmap\") or (http.user_agent contains \"masscan\") or (http.user_agent contains \"acunetix\") or (http.user_agent contains \"nessus\") or (http.user_agent contains \"nuclei\") or (http.user_agent contains \"gobuster\") or (http.user_agent contains \"dirbuster\")"
+    },
+    {
+      "action": "block",
+      "description": "Block SQL injection patterns in query strings",
+      "enabled": true,
+      "expression": "(http.request.uri.query contains \"union select\") or (http.request.uri.query contains \"1=1\") or (http.request.uri.query contains \"drop table\") or (http.request.uri.query contains \"<script\") or (http.request.uri.query contains \"javascript:\")"
+    },
+    {
+      "action": "block",
+      "description": "Block path traversal and sensitive file probes",
+      "enabled": true,
+      "expression": "(http.request.uri.path contains \"../\") or (http.request.uri.path contains \"%2e%2e\") or (http.request.uri.path contains \"/etc/passwd\") or (http.request.uri.path contains \".env\") or (http.request.uri.path contains \".git\")"
+    },
+    {
+      "action": "block",
+      "description": "Rate-limit admin and user management routes",
+      "enabled": true,
+      "expression": "(http.request.uri.path starts with \"/users\") or (http.request.uri.path starts with \"/admin\") or (http.request.uri.path starts with \"/enterprise\")",
+      "ratelimit": {
+        "characteristics": ["ip.src"],
+        "period": 60,
+        "requests_per_period": 30,
+        "mitigation_timeout": 60
+      }
+    },
+    {
+      "action": "skip",
+      "description": "Allow Stripe webhook POSTs without bot challenge",
+      "enabled": true,
+      "expression": "(http.request.uri.path eq \"/webhook/stripe\") and (http.request.method eq \"POST\")",
+      "action_parameters": {
+        "ruleset": "current"
+      }
+    }
+  ]
+}

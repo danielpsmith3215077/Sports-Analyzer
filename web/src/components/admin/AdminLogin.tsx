@@ -22,9 +22,9 @@ export default function AdminLogin({ onSuccess }: AdminLoginProps) {
     }
     setLoading(true);
     try {
-      const ok = await verifyAdminKey(key.trim());
-      if (!ok) {
-        setError("Invalid admin key.");
+      const result = await verifyAdminKey(key.trim());
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
       setAdminKey(key.trim());

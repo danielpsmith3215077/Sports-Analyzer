@@ -2,6 +2,7 @@ import BackendStatusBadge from "@/components/BackendStatusBadge";
 import CheckoutButton from "@/components/CheckoutButton";
 import CheckoutStatusBanner from "@/components/CheckoutStatusBanner";
 import DashboardAccessCard from "@/components/DashboardAccessCard";
+import DemoAccessButton from "@/components/DemoAccessButton";
 
 const PRIMARY_BUTTON =
   "bg-[#4c8dd6] text-white hover:bg-[#3a7bc0]";
@@ -42,6 +43,12 @@ export default function Home() {
                 {layer}
               </span>
             ))}
+          </div>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <DemoAccessButton label="View Live Demo — Investor Preview" />
+            <p className="text-xs text-zinc-500">
+              Full enterprise dashboard · no signup required
+            </p>
           </div>
         </div>
 

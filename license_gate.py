@@ -21,8 +21,17 @@ import streamlit as st
 
 API_URL = os.environ.get("SAAS_API_URL", "http://localhost:8000").rstrip("/")
 APP_URL = os.environ.get("APP_URL", "http://localhost:8501").rstrip("/")
+DEMO_ACCESS_TOKEN = os.environ.get("DEMO_ACCESS_TOKEN", "").strip()
 
 _TOKEN_KEY = "access_token"
+
+
+def _is_demo_token(token: str) -> bool:
+    if not token:
+        return False
+    if DEMO_ACCESS_TOKEN and token == DEMO_ACCESS_TOKEN:
+        return True
+    return False
 
 
 def _validate(token: str):
@@ -146,6 +155,8 @@ def enforce_license():
 
     # Valid — show a small expiry caption and a log-out control in the sidebar.
     days = result.get("days_remaining", 0)
+    if _is_demo_token(token):
+        st.info("**DEMO MODE** — Investor preview. Subscribe for full production access.")
     st.caption(f"✅ Access valid · plan: {result.get('plan_type', '?')} · expires in {days} days")
     with st.sidebar:
         st.markdown("### Account")

@@ -55,12 +55,28 @@ async function parseError(res: Response): Promise<string> {
   }
 }
 
-export async function verifyAdminKey(key: string): Promise<boolean> {
+export async function verifyAdminKey(
+  key: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const res = await fetch(apiUrl("/admin/verify"), {
     method: "POST",
     headers: adminHeaders(key),
   });
-  return res.ok;
+  if (res.ok) return { ok: true };
+  if (res.status === 503) {
+    return {
+      ok: false,
+      error:
+        "Admin key is not configured on the server yet. In Render → sportsanalyzer-api → Environment, add ADMIN_API_KEY, save, and wait for redeploy.",
+    };
+  }
+  if (res.status === 401) {
+    return { ok: false, error: "Invalid admin key." };
+  }
+  return {
+    ok: false,
+    error: `Verification failed (HTTP ${res.status}). ${await parseError(res)}`,
+  };
 }
 
 export async function fetchAdminStats(): Promise<AdminStats> {

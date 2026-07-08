@@ -51,6 +51,9 @@ services:
       # this dashboard's own public address.
       - key: APP_URL
         value: https://sportsanalyzer-dashboard.onrender.com
+      # Investor demo banner (license_gate.py checks this against ?token=).
+      - key: DEMO_ACCESS_TOKEN
+        sync: false
       # Optional — enables the "Executive Tactical Breakdown (AI)" section.
       # Leave unset to skip it with no error.
       - key: ANTHROPIC_API_KEY

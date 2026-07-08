@@ -277,6 +277,7 @@ async def create_user(
     parent_enterprise_id: str | None = None,
     stripe_customer_id: str | None = None,
     status: str = STATUS_ACTIVE,
+    access_token: str | None = None,
 ) -> dict:
     db = _require_database()
     created = now_utc()
@@ -287,7 +288,7 @@ async def create_user(
         "email": email,
         "name": name,
         "plan_type": plan_type,
-        "access_token": generate_access_token(),
+        "access_token": access_token or generate_access_token(),
         "stripe_customer_id": stripe_customer_id,
         "parent_enterprise_id": parent_enterprise_id,
         "created_at": created,

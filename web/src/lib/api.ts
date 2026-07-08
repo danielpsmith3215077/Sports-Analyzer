@@ -42,3 +42,7 @@ export function dashboardUrl(accessToken?: string): string {
 export const SITE_URL: string =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
   "https://sportsanalyzer-web.vercel.app";
+
+/** Shareable investor demo token — inlined at build time from Vercel env. */
+export const DEMO_ACCESS_TOKEN: string =
+  process.env.NEXT_PUBLIC_DEMO_ACCESS_TOKEN?.trim() || "";

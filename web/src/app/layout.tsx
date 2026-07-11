@@ -1,23 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Instrument_Serif, Outfit } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegister from "./sw-register";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const instrument = Instrument_Serif({
+  variable: "--font-instrument",
   subsets: ["latin"],
+  weight: "400",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   applicationName: "Sports Analyzer",
-  title: "Sports Analyzer — UFC Fight Prediction Engine",
+  title: "Sports Analyzer — Quantitative Fight Intelligence",
   description:
-    "Six-layer quantitative UFC fight prediction engine with a licensed analytics dashboard.",
+    "Institutional-grade UFC edge from a six-layer quantitative model, Monte Carlo simulation, and licensed analytics access.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -35,7 +38,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e1117",
+  themeColor: "#161412",
   viewportFit: "cover",
 };
 
@@ -47,9 +50,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${outfit.variable} ${instrument.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-sans">
         <ServiceWorkerRegister />
         {children}
       </body>

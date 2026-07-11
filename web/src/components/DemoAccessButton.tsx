@@ -9,7 +9,7 @@ import { openExternal } from "@/lib/openExternal";
  */
 export default function DemoAccessButton({
   label = "View Live Demo",
-  className = "bg-emerald-600 text-white hover:bg-emerald-500",
+  className = "sa-btn sa-btn-secondary",
 }: {
   label?: string;
   className?: string;
@@ -27,7 +27,7 @@ export default function DemoAccessButton({
       type="button"
       onClick={handleClick}
       disabled={!DEMO_ACCESS_TOKEN}
-      className={`rounded-full px-6 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {label}
     </button>

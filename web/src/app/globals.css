@@ -1,20 +1,398 @@
 @import "tailwindcss";
 
 :root {
-  /* Match Streamlit dashboard (app.py) dark theme */
-  --background: #0e1117;
-  --foreground: #ededed;
+  /* Warm charcoal + champagne — institutional private desk */
+  --background: #161412;
+  --background-elevated: #1f1c19;
+  --background-soft: #24201c;
+  --foreground: #f3eee6;
+  --muted: #9a9186;
+  --muted-strong: #c4bbb0;
+  --champagne: #c9a96e;
+  --champagne-bright: #ddc08a;
+  --champagne-dim: rgba(201, 169, 110, 0.14);
+  --champagne-line: rgba(201, 169, 110, 0.28);
+  --ink-deep: #0c0b0a;
+  --border: rgba(243, 238, 230, 0.08);
+  --border-strong: rgba(243, 238, 230, 0.14);
+  --success: #7d9b78;
+  --danger: #c17a6e;
+  --radius: 0.375rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-outfit);
+  --font-display: var(--font-instrument);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--champagne-dim);
+  color: var(--foreground);
+}
+
+/* Atmospheric page canvas — not a flat void */
+.sa-atmosphere {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 90% 60% at 70% 15%, rgba(201, 169, 110, 0.11), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(90, 70, 45, 0.22), transparent 50%),
+    linear-gradient(165deg, #1a1714 0%, #141210 42%, #100e0c 100%);
+}
+
+.sa-atmosphere::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.35;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: soft-light;
+}
+
+.sa-atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 70%, rgba(12, 11, 10, 0.55) 100%);
+}
+
+/* Full-bleed hero visual plane */
+.sa-hero-visual {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sa-hero-visual__plane {
+  position: absolute;
+  inset: -8% -4% auto auto;
+  width: min(72vw, 920px);
+  height: min(88vh, 780px);
+  background:
+    radial-gradient(ellipse at 42% 38%, rgba(201, 169, 110, 0.18) 0%, transparent 42%),
+    radial-gradient(ellipse at 68% 62%, rgba(80, 60, 40, 0.45) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(36, 30, 24, 0.2) 0%, rgba(12, 11, 10, 0.85) 100%);
+  clip-path: polygon(18% 0%, 100% 0%, 100% 100%, 0% 88%);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  animation: sa-parallax-drift 18s ease-in-out infinite alternate;
+}
+
+.sa-hero-visual__plane::before {
+  content: "";
+  position: absolute;
+  inset: 12% 18% 18% 22%;
+  border: 1px solid var(--champagne-line);
+  opacity: 0.35;
+  transform: skewY(-4deg);
+}
+
+.sa-hero-visual__plane::after {
+  content: "";
+  position: absolute;
+  right: 12%;
+  top: 22%;
+  width: 1px;
+  height: 46%;
+  background: linear-gradient(180deg, transparent, var(--champagne), transparent);
+  opacity: 0.55;
+}
+
+.sa-hero-visual__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    linear-gradient(rgba(243, 238, 230, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(243, 238, 230, 0.35) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 60% at 75% 35%, black 10%, transparent 70%);
+}
+
+/* Typography helpers */
+.sa-brand {
+  font-family: var(--font-instrument), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+.sa-display {
+  font-family: var(--font-instrument), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.sa-eyebrow {
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+/* Motion */
+@keyframes sa-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sa-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sa-parallax-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-1.5%, 2.5%, 0) scale(1.03);
+  }
+}
+
+.sa-reveal {
+  opacity: 0;
+  animation: sa-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sa-reveal-delay-1 {
+  animation-delay: 0.12s;
+}
+
+.sa-reveal-delay-2 {
+  animation-delay: 0.24s;
+}
+
+.sa-reveal-delay-3 {
+  animation-delay: 0.36s;
+}
+
+.sa-reveal-delay-4 {
+  animation-delay: 0.48s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sa-reveal,
+  .sa-reveal-delay-1,
+  .sa-reveal-delay-2,
+  .sa-reveal-delay-3,
+  .sa-reveal-delay-4 {
+    animation: sa-fade-in 0.01s forwards;
+    opacity: 1;
+    transform: none;
+  }
+
+  .sa-hero-visual__plane {
+    animation: none;
+  }
+}
+
+/* Buttons — refined, not pill-shaped */
+.sa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius);
+  padding: 0.875rem 1.5rem;
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.sa-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.sa-btn-primary {
+  background: var(--champagne);
+  color: var(--ink-deep);
+  border: 1px solid var(--champagne);
+}
+
+.sa-btn-primary:hover:not(:disabled) {
+  background: var(--champagne-bright);
+  border-color: var(--champagne-bright);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(201, 169, 110, 0.22);
+}
+
+.sa-btn-secondary {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--champagne-line);
+}
+
+.sa-btn-secondary:hover:not(:disabled) {
+  border-color: var(--champagne);
+  color: var(--champagne-bright);
+  background: var(--champagne-dim);
+  transform: translateY(-1px);
+}
+
+.sa-btn-ghost {
+  background: transparent;
+  color: var(--muted-strong);
+  border: 1px solid var(--border-strong);
+}
+
+.sa-btn-ghost:hover:not(:disabled) {
+  border-color: var(--champagne-line);
+  color: var(--foreground);
+  background: rgba(243, 238, 230, 0.03);
+}
+
+/* Interactive cards (pricing / access only) */
+.sa-card {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(36, 32, 28, 0.92) 0%, rgba(26, 23, 20, 0.96) 100%);
+  border-radius: 0.5rem;
+  padding: 2rem;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.sa-card:hover {
+  border-color: var(--champagne-line);
+}
+
+.sa-card-featured {
+  border-color: var(--champagne-line);
+  background:
+    linear-gradient(160deg, rgba(201, 169, 110, 0.1) 0%, rgba(31, 28, 25, 0.96) 45%);
+}
+
+.sa-input {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: rgba(12, 11, 10, 0.55);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.sa-input::placeholder {
+  color: var(--muted);
+}
+
+.sa-input:focus {
+  border-color: var(--champagne);
+}
+
+/* Status badge — CSS dots, no emoji */
+.sa-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-strong);
+  background: rgba(12, 11, 10, 0.35);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-strong);
+}
+
+.sa-status__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sa-status--checking .sa-status__dot {
+  background: var(--muted);
+}
+
+.sa-status--online {
+  border-color: rgba(125, 155, 120, 0.35);
+  color: #b7c9b3;
+}
+
+.sa-status--online .sa-status__dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(125, 155, 120, 0.15);
+}
+
+.sa-status--offline {
+  border-color: rgba(193, 122, 110, 0.35);
+  color: #d4a89f;
+}
+
+.sa-status--offline .sa-status__dot {
+  background: var(--danger);
+}
+
+.sa-banner {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  padding: 0.875rem 1.125rem;
+  font-size: 0.875rem;
+}
+
+.sa-banner--success {
+  border-color: rgba(125, 155, 120, 0.4);
+  background: rgba(125, 155, 120, 0.1);
+  color: #c5d4c1;
+}
+
+.sa-banner--neutral {
+  background: rgba(243, 238, 230, 0.04);
+  color: var(--muted-strong);
 }

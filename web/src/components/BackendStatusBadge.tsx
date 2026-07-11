@@ -8,25 +8,10 @@ type Status = "checking" | "online" | "offline";
 const POLL_INTERVAL_MS = 15_000;
 const FETCH_TIMEOUT_MS = 5_000;
 
-const STATUS_STYLES: Record<Status, string> = {
-  checking:
-    "bg-zinc-100 text-zinc-700 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
-  online:
-    "bg-green-50 text-green-800 border-green-300 dark:bg-green-950 dark:text-green-300 dark:border-green-800",
-  offline:
-    "bg-red-50 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
-};
-
 const STATUS_LABEL: Record<Status, string> = {
-  checking: "Checking\u2026",
+  checking: "Checking",
   online: "Connected",
   offline: "Offline",
-};
-
-const STATUS_EMOJI: Record<Status, string> = {
-  checking: "\u26AA",
-  online: "\uD83D\uDFE2",
-  offline: "\uD83D\uDD34",
 };
 
 /**
@@ -68,16 +53,16 @@ export default function BackendStatusBadge() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-1 sm:items-start">
+    <div className="flex flex-col items-start gap-1.5">
       <span
         role="status"
         aria-live="polite"
-        className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium shadow-sm transition-colors ${STATUS_STYLES[status]}`}
+        className={`sa-status sa-status--${status}`}
       >
-        <span aria-hidden="true">{STATUS_EMOJI[status]}</span>
-        Backend Connection: {STATUS_LABEL[status]}
+        <span className="sa-status__dot" aria-hidden="true" />
+        Engine {STATUS_LABEL[status]}
       </span>
-      <span className="text-xs text-zinc-400 dark:text-zinc-600">
+      <span className="max-w-[min(100%,18rem)] truncate text-[0.65rem] tracking-wide text-[var(--muted)]">
         {API_BASE_URL}
       </span>
     </div>

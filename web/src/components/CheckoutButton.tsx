@@ -15,7 +15,7 @@ type Plan = "individual" | "enterprise";
 export default function CheckoutButton({
   plan,
   label,
-  className = "",
+  className = "sa-btn sa-btn-primary",
 }: {
   plan: Plan;
   label: string;
@@ -59,11 +59,13 @@ export default function CheckoutButton({
       <button
         onClick={startCheckout}
         disabled={loading}
-        className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
+        className={`disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       >
         {loading ? "Redirecting to secure checkout…" : label}
       </button>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && (
+        <p className="text-xs text-[var(--danger)]">{error}</p>
+      )}
     </div>
   );
 }

@@ -3,11 +3,7 @@ import CheckoutButton from "@/components/CheckoutButton";
 import CheckoutStatusBanner from "@/components/CheckoutStatusBanner";
 import DashboardAccessCard from "@/components/DashboardAccessCard";
 import DemoAccessButton from "@/components/DemoAccessButton";
-
-const PRIMARY_BUTTON =
-  "bg-[#4c8dd6] text-white hover:bg-[#3a7bc0]";
-const SECONDARY_BUTTON =
-  "border border-[#2d3348] text-zinc-100 hover:bg-[#1a1d29]";
+import Link from "next/link";
 
 const LAYERS = [
   "Recursive Elo",
@@ -20,86 +16,168 @@ const LAYERS = [
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col items-center bg-[#0e1117]">
-      <main className="flex w-full max-w-5xl flex-1 flex-col items-center gap-16 px-6 py-16 sm:px-10">
-        {/* Header */}
-        <div className="flex w-full flex-col items-center gap-4 text-center">
-          <BackendStatusBadge />
-          <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl">
-            🥊 UFC Fight Prediction Engine
-          </h1>
-          <p className="max-w-2xl text-lg text-zinc-400">
-            A six-layer quantitative model — Recursive Elo, Physical Matchup,
-            Contextual Stats, a Decay-Adjusted Weighted Ensemble, and a
-            10,000-iteration Monte Carlo simulation — turned into a licensed
-            analytics dashboard.
-          </p>
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-            {LAYERS.map((layer) => (
-              <span
-                key={layer}
-                className="rounded-full border border-[#2d3348] px-3 py-1 text-xs font-medium text-zinc-400"
-              >
-                {layer}
-              </span>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <DemoAccessButton label="View Live Demo — Investor Preview" />
-            <p className="text-xs text-zinc-500">
-              Full enterprise dashboard · no signup required
-            </p>
-          </div>
+    <div className="sa-atmosphere flex flex-1 flex-col">
+      {/* ── Hero: one composition ── */}
+      <header className="relative isolate min-h-[100svh] w-full overflow-hidden">
+        <div className="sa-hero-visual" aria-hidden="true">
+          <div className="sa-hero-visual__grid" />
+          <div className="sa-hero-visual__plane" />
         </div>
 
-        <CheckoutStatusBanner />
-
-        {/* Pricing */}
-        <section className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className="flex flex-col gap-4 rounded-2xl border border-[#2d3348] bg-[#1a1d29] p-8">
-            <h2 className="text-xl font-semibold text-zinc-50">
-              Individual
-            </h2>
-            <p className="text-sm text-zinc-400">
-              Full access to the prediction dashboard for a single analyst.
-            </p>
-            <ul className="flex flex-1 flex-col gap-2 text-sm text-zinc-400">
-              <li>• Unlimited matchup predictions</li>
-              <li>• Monte Carlo simulation &amp; confidence intervals</li>
-              <li>• AI-generated tactical breakdowns</li>
-            </ul>
-            <CheckoutButton
-              plan="individual"
-              label="Subscribe — Individual"
-              className={PRIMARY_BUTTON}
-            />
+        <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col px-6 pb-16 pt-8 sm:px-10 lg:px-12">
+          <div className="sa-reveal flex items-center justify-between gap-4">
+            <BackendStatusBadge />
           </div>
 
-          <div className="flex flex-col gap-4 rounded-2xl border border-[#2d3348] bg-[#1a1d29] p-8">
-            <h2 className="text-xl font-semibold text-zinc-50">
-              Enterprise
-            </h2>
-            <p className="text-sm text-zinc-400">
-              Everything in Individual, plus the ability to invite your team.
+          <div className="flex flex-1 flex-col justify-center py-16 sm:py-20 lg:max-w-2xl lg:py-0">
+            <p className="sa-eyebrow sa-reveal sa-reveal-delay-1">
+              Licensed analytics desk
             </p>
-            <ul className="flex flex-1 flex-col gap-2 text-sm text-zinc-400">
-              <li>• Everything in Individual</li>
-              <li>• Invite teammates under one subscription</li>
-              <li>• Priority support</li>
-            </ul>
-            <CheckoutButton
-              plan="enterprise"
-              label="Subscribe — Enterprise"
-              className={SECONDARY_BUTTON}
-            />
+
+            <h1 className="sa-brand sa-reveal sa-reveal-delay-1 mt-5 text-[clamp(3.25rem,9vw,5.75rem)] text-[var(--foreground)]">
+              Sports Analyzer
+            </h1>
+
+            <h2 className="sa-display sa-reveal sa-reveal-delay-2 mt-6 max-w-xl text-[clamp(1.5rem,3.5vw,2.15rem)] text-[var(--champagne-bright)]">
+              Quantitative fight intelligence
+            </h2>
+
+            <p className="sa-reveal sa-reveal-delay-3 mt-5 max-w-md text-base leading-relaxed text-[var(--muted-strong)] sm:text-lg">
+              A six-layer model and 10,000-iteration Monte Carlo engine —
+              delivered as licensed institutional access.
+            </p>
+
+            <div className="sa-reveal sa-reveal-delay-4 mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <a href="#subscribe" className="sa-btn sa-btn-primary">
+                Subscribe
+              </a>
+              <DemoAccessButton
+                label="View Live Demo"
+                className="sa-btn sa-btn-secondary"
+              />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-20 px-6 pb-24 sm:px-10 lg:px-12">
+        <div className="w-full">
+          <CheckoutStatusBanner />
+        </div>
+
+        {/* Model layers — below fold */}
+        <section aria-labelledby="model-heading" className="max-w-3xl">
+          <p className="sa-eyebrow">Methodology</p>
+          <h2
+            id="model-heading"
+            className="sa-display mt-3 text-3xl text-[var(--foreground)] sm:text-4xl"
+          >
+            Six layers. One edge.
+          </h2>
+          <p className="mt-4 max-w-xl text-[var(--muted-strong)]">
+            Each bout is scored through recursive ratings, physical matchup,
+            context, ensemble weighting, wear-and-tear decay, and Monte Carlo
+            simulation — then surfaced in a licensed dashboard.
+          </p>
+          <ul className="mt-8 grid grid-cols-1 gap-x-10 gap-y-3 sm:grid-cols-2">
+            {LAYERS.map((layer, i) => (
+              <li
+                key={layer}
+                className="flex items-baseline gap-3 border-t border-[var(--border)] pt-3 text-sm text-[var(--muted-strong)]"
+              >
+                <span className="font-mono text-xs text-[var(--champagne)]">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {layer}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Pricing — cards only where interaction lives */}
+        <section id="subscribe" aria-labelledby="pricing-heading" className="scroll-mt-12">
+          <div className="max-w-xl">
+            <p className="sa-eyebrow">Access</p>
+            <h2
+              id="pricing-heading"
+              className="sa-display mt-3 text-3xl text-[var(--foreground)] sm:text-4xl"
+            >
+              Licensed seats
+            </h2>
+            <p className="mt-4 text-[var(--muted-strong)]">
+              Secure Stripe checkout. Instant dashboard access once licensed.
+            </p>
+          </div>
+
+          <div className="mt-10 grid w-full grid-cols-1 gap-5 sm:grid-cols-2">
+            <article className="sa-card sa-card-featured flex flex-col gap-5">
+              <div>
+                <h3 className="sa-display text-2xl text-[var(--foreground)]">
+                  Individual
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                  Full prediction desk for a single analyst.
+                </p>
+              </div>
+              <ul className="flex flex-1 flex-col gap-2.5 text-sm text-[var(--muted-strong)]">
+                <li className="border-t border-[var(--border)] pt-2.5">
+                  Unlimited matchup predictions
+                </li>
+                <li className="border-t border-[var(--border)] pt-2.5">
+                  Monte Carlo simulation &amp; confidence intervals
+                </li>
+                <li className="border-t border-[var(--border)] pt-2.5">
+                  AI-generated tactical breakdowns
+                </li>
+              </ul>
+              <CheckoutButton
+                plan="individual"
+                label="Subscribe — Individual"
+                className="sa-btn sa-btn-primary w-full"
+              />
+            </article>
+
+            <article className="sa-card flex flex-col gap-5">
+              <div>
+                <h3 className="sa-display text-2xl text-[var(--foreground)]">
+                  Enterprise
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                  Everything in Individual, with seats for your desk.
+                </p>
+              </div>
+              <ul className="flex flex-1 flex-col gap-2.5 text-sm text-[var(--muted-strong)]">
+                <li className="border-t border-[var(--border)] pt-2.5">
+                  Everything in Individual
+                </li>
+                <li className="border-t border-[var(--border)] pt-2.5">
+                  Invite teammates under one subscription
+                </li>
+                <li className="border-t border-[var(--border)] pt-2.5">
+                  Priority support
+                </li>
+              </ul>
+              <CheckoutButton
+                plan="enterprise"
+                label="Subscribe — Enterprise"
+                className="sa-btn sa-btn-ghost w-full"
+              />
+            </article>
           </div>
         </section>
 
-        {/* Dashboard access handoff */}
         <DashboardAccessCard />
 
-        <footer className="mt-auto pt-8 text-center text-xs text-zinc-600">
-          Billing is handled securely via Stripe-hosted checkout on the web.
+        <footer className="mt-auto border-t border-[var(--border)] pt-10 text-center text-xs text-[var(--muted)]">
+          <p>Billing is handled securely via Stripe-hosted checkout.</p>
+          <p className="mt-3">
+            <Link
+              href="/admin"
+              className="text-[var(--muted)] transition-colors hover:text-[var(--champagne)]"
+            >
+              Admin
+            </Link>
+          </p>
         </footer>
       </main>
     </div>
